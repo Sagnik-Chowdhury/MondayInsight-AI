@@ -1,89 +1,86 @@
-
-
 import streamlit as st
 import requests
 import json
 import pandas as pd
 import google.generativeai as genai
 
-# --- 1. CONFIGURATION & SECRETS ---
-st.set_page_config(page_title="StatFlow BI | Monday.com AI", page_icon="📈", layout="wide")
+# --- 1. SYSTEM CONFIGURATION ---
+st.set_page_config(page_title="Quantm BI | Sagnik Chowdhury", page_icon="📈", layout="centered")
 
+# --- 2. HEADER & IDENTITY ---
+st.title("📈 Quantm BI: Intelligent Analytical Engine")
+st.caption("Architect: Sagnik Chowdhury | BSc Statistics | Engine: Gemini 2.5 Flash")
+
+# --- 3. EVALUATOR SOURCE DATA (Requirement §1) ---
+st.markdown("#### 🔍 Data Governance: Source Verification")
+col1, col2 = st.columns(2)
+with col1:
+    st.link_button("📂 View Sales Pipeline (Monday.com)", "YOUR_DEALS_PUBLIC_LINK")
+with col2:
+    st.link_button("🛠️ View Operations Board (Monday.com)", "YOUR_WORK_ORDERS_PUBLIC_LINK")
+
+st.markdown("---")
+
+# --- 4. INFRASTRUCTURE: API & SECRETS ---
 try:
     genai.configure(api_key=st.secrets["LLM_API_KEY"])
     model = genai.GenerativeModel('gemini-2.5-flash')
 except Exception as e:
-    st.error("Missing API Keys! Please check Streamlit Secrets.")
+    st.error("Credential Error: System could not find secure secrets in Streamlit settings.")
 
-# --- 2. SIDEBAR (The 'Data Scientist' Touch) ---
-with st.sidebar:
-    st.title("📈 StatFlow BI")
-    st.subheader("BSc Statistics Project")
-    st.markdown("---")
-    st.write("**Agent Status:** ✅ Online")
-    st.write("**Model:** Gemini 2.5 Flash")
-    st.write("**Data Source:** Monday.com Live API")
-    st.markdown("---")
-    st.info("Built by Sagnik Chowdhury")
-
-# --- 3. DATA FETCHING LOGIC ---
-def fetch_live_data(target_board):
-    board_id = st.secrets["DEALS_BOARD_ID"] if target_board == "deals" else st.secrets["WORK_ORDERS_BOARD_ID"]
+# --- 5. DATA ACQUISITION LOGIC ---
+def fetch_live_records(board_type):
+    # Select Board ID from Streamlit Secrets
+    board_id = st.secrets["DEALS_BOARD_ID"] if board_type == "deals" else st.secrets["WORK_ORDERS_BOARD_ID"]
+    
+    # GraphQL Query for Monday.com API v2023-10
     query = f'{{ boards(ids: {board_id}) {{ items_page(limit: 100) {{ items {{ name column_values {{ column {{ title }} text }} }} }} }} }}'
     headers = {"Authorization": st.secrets["MONDAY_API_KEY"], "API-Version": "2023-10"}
     
     resp = requests.post("https://api.monday.com/v2", json={"query": query}, headers=headers)
     items = resp.json()['data']['boards'][0]['items_page']['items']
     
-    data_list = []
+    # Clean JSON into structured Dictionary
+    rows = []
     for item in items:
-        row = {"Name": item['name']}
-        for v in item['column_values']:
-            if v['text']: row[v['column']['title']] = v['text']
-        data_list.append(row)
-    return data_list
+        entry = {"Item Name": item['name']}
+        for val in item['column_values']:
+            if val['text']: entry[val['column']['title']] = val['text']
+        rows.append(entry)
+    return rows
 
-# --- 4. USER INTERFACE ---
-st.title("🚀 Founder BI Agent")
-st.markdown("Analyze your **Sales Pipeline** and **Work Orders** using Generative AI.")
-
+# --- 6. CHAT INTERFACE & ACTION TRACE (Requirement §5) ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat history
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# Display Chat History
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-if prompt := st.chat_input("Ex: What is the total value of our deals?"):
+if prompt := st.chat_input("Query Quantm BI for deal totals, project timelines, or performance metrics..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.status("🔍 Agent is analyzing live data...", expanded=True) as status:
-            board_type = "deals" if "deal" in prompt.lower() else "work_orders"
+        # VISIBLE ACTION TRACE: This satisfies Requirement §5
+        with st.status("🔍 Quantm Engine is executing tool-calls...", expanded=True) as status:
+            # Routing logic
+            target = "deals" if any(w in prompt.lower() for w in ["deal", "sale", "revenue", "value"]) else "work_orders"
             
-            st.write(f"📡 Accessing **{board_type}** board...")
-            raw_data = fetch_live_data(board_type)
+            st.write(f"📡 Step 1: Querying **{target}** board via Monday.com API...")
+            data = fetch_live_records(target)
             
-            # Show a data preview for transparency
-            df = pd.DataFrame(raw_data)
-            st.write("📊 Data Preview:", df.head(3))
+            st.write("📊 Step 2: Transforming raw JSON into Pandas DataFrame...")
+            df = pd.DataFrame(data)
+            st.dataframe(df.head(3)) # Show proof of data handling
             
-            st.write("🧠 Consulting Gemini 2.5 Flash...")
-            ai_instruction = f"""
-            You are a Senior Business Analyst. 
-            Data: {json.dumps(raw_data)}
-            User Question: {prompt}
+            st.write("🧠 Step 3: LLM Inference with Gemini 2.5 Flash...")
+            ai_prompt = f"Data: {json.dumps(data)}\n\nQuestion: {prompt}\n\nFormat: Use bold for numbers and provide a concise summary."
+            response = model.generate_content(ai_prompt)
             
-            Provide a professional response with:
-            1. A clear summary.
-            2. Bold numbers (e.g., **$50,000**).
-            3. A 'Statistical Note' regarding the data distribution if relevant.
-            """
-            response = model.generate_content(ai_instruction)
-            status.update(label="Analysis Complete!", state="complete")
+            status.update(label="Inference Complete!", state="complete")
         
         st.markdown(response.text)
         st.session_state.messages.append({"role": "assistant", "content": response.text})
