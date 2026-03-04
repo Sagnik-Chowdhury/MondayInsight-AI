@@ -28,25 +28,34 @@ try:
 except Exception as e:
     st.error("Credential Error: System could not find secure secrets in Streamlit settings.")
 
-# --- 5. DATA ACQUISITION LOGIC ---
+# --- 5. DATA ACQUISITION & CLEANING (Internal Agent Logic) ---
 def fetch_live_records(board_type):
     # Select Board ID from Streamlit Secrets
     board_id = st.secrets["DEALS_BOARD_ID"] if board_type == "deals" else st.secrets["WORK_ORDERS_BOARD_ID"]
     
-    # GraphQL Query for Monday.com API v2023-10
+    # GraphQL Query for Monday.com API
     query = f'{{ boards(ids: {board_id}) {{ items_page(limit: 100) {{ items {{ name column_values {{ column {{ title }} text }} }} }} }} }}'
     headers = {"Authorization": st.secrets["MONDAY_API_KEY"], "API-Version": "2023-10"}
     
     resp = requests.post("https://api.monday.com/v2", json={"query": query}, headers=headers)
     items = resp.json()['data']['boards'][0]['items_page']['items']
     
-    # Clean JSON into structured Dictionary
+    # --- START OF CLEANING LOGIC ---
     rows = []
     for item in items:
+        # Step 1: Initialize row with the Item Name
         entry = {"Item Name": item['name']}
+        
+        # Step 2: Iterate through columns and clean data
         for val in item['column_values']:
-            if val['text']: entry[val['column']['title']] = val['text']
+            # Requirement: Handle data quality issues gracefully
+            # We skip columns that are completely empty to reduce "noise" for the AI
+            if val['text'] and val['text'].strip() not in ["", "None", "null"]: 
+                entry[val['column']['title']] = val['text']
+        
         rows.append(entry)
+    # --- END OF CLEANING LOGIC ---
+    
     return rows
 
 # --- 6. CHAT INTERFACE & ACTION TRACE (Requirement §5) ---
