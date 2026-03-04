@@ -1,7 +1,7 @@
 # Quantm BI: Intelligent Analytical Engine
 **Developer:** Sagnik Chowdhury
 
-**Deployment:** https://mondayinsight-ai-kqto3mvcfqqqfignwmjhuv.streamlit.app/~/+/YOUR_DEALS_PUBLIC_LINK 
+**Deployment:** https://mondayinsight-ai-kqto3mvcfqqqfignwmjhuv.streamlit.app/
 ## Overview
 Quantm BI is an AI-driven Business Intelligence (BI) agent designed for startup founders. It bridges the gap between raw operational data in Monday.com and executive-level decision-making. Using Gemini 2.5 Flash, the agent performs real-time data retrieval, cleaning, and strategic synthesis.
 
