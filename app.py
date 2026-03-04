@@ -9,15 +9,15 @@ st.set_page_config(page_title="Quantm BI | Sagnik Chowdhury", page_icon="📈", 
 
 # --- 2. HEADER & IDENTITY ---
 st.title("📈 Quantm BI: Intelligent Analytical Engine")
-st.caption("Architect: Sagnik Chowdhury | BSc Statistics | Engine: Gemini 2.5 Flash")
+st.caption("Architect: Sagnik Chowdhury  | Engine: Gemini 2.5 Flash")
 
 # --- 3. EVALUATOR SOURCE DATA (Requirement §1) ---
 st.markdown("#### 🔍 Data Governance: Source Verification")
 col1, col2 = st.columns(2)
 with col1:
-    st.link_button("📂 View Sales Pipeline (Monday.com)", "YOUR_DEALS_PUBLIC_LINK")
+    st.link_button("📂 View Sales Pipeline (Monday.com)", "https://sagnik10423s-team.monday.com/boards/5026985145")
 with col2:
-    st.link_button("🛠️ View Operations Board (Monday.com)", "YOUR_WORK_ORDERS_PUBLIC_LINK")
+    st.link_button("🛠️ View Operations Board (Monday.com)", "https://sagnik10423s-team.monday.com/boards/5026985096")
 
 st.markdown("---")
 
