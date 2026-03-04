@@ -1,4 +1,13 @@
-st.markdown("[🔗 View Source Data on Monday.com](YOUR_PASTED_LINK_HERE)")
+st.title("🚀 Founder BI Agent")
+
+# Professional links for the evaluator
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown("[📊 View Deals Board](https://sagnik10423s-team.monday.com/boards/5026985145)")
+with col2:
+    st.markdown("[🛠️ View Work Orders Board](https://sagnik10423s-team.monday.com/boards/5026985096)")
+
+st.markdown("---")
 
 import streamlit as st
 import requests
